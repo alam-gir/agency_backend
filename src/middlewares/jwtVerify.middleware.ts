@@ -20,7 +20,7 @@ export const verifyJWT = async (
     const token =
       req.cookies?.access_token ||
       req.headers.authorization?.replace("Bearer ", "");
-      
+
     if (!token) throw new ApiError(401, "unathorized");
 
     const decodedToken = jwt.verify(
@@ -40,11 +40,13 @@ export const verifyJWT = async (
 
     next();
   } catch (error) {
-    
     fs.readdir("./public/temp/", (err, files) => {
-      for (let file of files) {
-        if (fs.existsSync(`./public/temp/${file}`)) {
-          fs.unlinkSync(`./public/temp/${file}`);
+      // files iterables
+      if (Array.isArray(files)) {
+        for (let file of files) {
+          if (fs.existsSync(`./public/temp/${file}`)) {
+            fs.unlinkSync(`./public/temp/${file}`);
+          }
         }
       }
     });
@@ -59,7 +61,6 @@ export const verifyJWT = async (
         .status(error.statusCode)
         .json(new ApiError(error.statusCode, error.message));
     } else if (error instanceof JsonWebTokenError) {
-      
       return res.status(401).json(new ApiError(401, "unathorized!"));
     } else if ((error as any).name === "ValidationError") {
       return res.status(400).json(new ApiError(400, (error as any).message));
