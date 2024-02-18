@@ -1,5 +1,5 @@
 import { CorsOptions } from "cors";
-const whitlists = ["http://localhost:3000", "http://localhost:3001"];
+const whitlists = ["http://localhost:3000", "http://localhost:3001","https://agency-frontend-mocha.vercel.app/", "https://wafipix.com", "http://wafipix.com"];
 export const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     if (whitlists.indexOf(origin!) !== -1 || !origin) {
