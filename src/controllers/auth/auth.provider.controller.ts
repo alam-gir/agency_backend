@@ -35,7 +35,6 @@ const loginProvider = async (req: Request, res: Response) => {
       access_token: access_token as string,
       provider: provider,
     });
-    console.log({userInfo});
 
     if (!userInfo) throw new ApiError(400, "Failed to fetch user info!");
     let dbUser = await getDbUser(userInfo.email);
