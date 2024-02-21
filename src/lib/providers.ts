@@ -51,7 +51,7 @@ export const providers = {
         grant_type: "authorization_code",
       };
 
-      const response = await fetch(`https://oauth2.facebook.com/token`, {
+      const response = await fetch(`https://graph.facebook.com/v13.0/oauth/access_token?client_id=${data.client_id}&redirect_uri=${data.redirectUri}&client_secret=${data.client_secret}&code=${code}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -60,6 +60,7 @@ export const providers = {
       });
 
       const result = await response.json();
+      console.log({result})
 
       return result.access_token;
     },
@@ -69,6 +70,7 @@ export const providers = {
       );
 
       const user = await response.json();
+      console.log({user})
 
       return user;
     }

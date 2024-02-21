@@ -59,12 +59,13 @@ const loginProvider = async (req: Request, res: Response) => {
 
     return res.status(200).redirect(process.env.FORNTEND_BASE_URL!);
   } catch (error) {
+    console.log({error})
     if (error instanceof ApiError)
       return res
         .status(error.statusCode)
         .json({ message: error.message, success: false });
     return res.status(500).json({
-      message: "Internal server error when try to login with provider!",
+      message: (error as any).message || "Internal server error when try to login with provider!",
     });
   }
 };
@@ -96,9 +97,9 @@ const getAccessToken = async ({
     case "google":
       return await providers.google.getAccessToken({ code });
     case "facebook":
-      return "";
+      return providers.facebook.getAccessToken({ code });
     case "github":
-      return "";
+      return providers.github.getAccessToken({ code });
     default:
       return null;
   }
