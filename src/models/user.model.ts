@@ -16,7 +16,7 @@ export interface IUser extends Document {
   isPasswordValid: (password: string) => Promise<boolean>;
 }
 
-export interface IUserPopulate  {
+export interface IUserPopulate {
   avatar: string;
 }
 
@@ -36,7 +36,8 @@ const userSchema = new Schema<IUser>(
     },
     avatar: {
       type: String,
-      ref: "image",default: ""
+      ref: "image",
+      default: "",
     },
     phone: {
       type: String,
@@ -100,6 +101,7 @@ userSchema.methods.generateRefreshToken = function () {
       expiresIn: "15d",
     }
   );
+
 };
 
 const UserModel = mongoose.model<IUser>("user", userSchema);

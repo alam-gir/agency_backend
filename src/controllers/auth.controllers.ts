@@ -213,8 +213,22 @@ const loginUserProvider = async (req: Request, res: Response) => {
     user.refreshToken = [...user.refreshToken!, refresh_token];
     await user.save();
 
-    setCookieToBrowser(res, "refresh_token", refresh_token, 60 * 60 * 24 * 15);
+    res.cookie("refresh_token", refresh_token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      maxAge: 60 * 60 * 24 * 15 * 1000, // 15 days
+    });
 
+    res.cookie("access_token", access_token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      maxAge: 60 * 15 * 1000, // 15 minutes
+    });
+
+    console.log({ access_token, refresh_token })
+    console.log("logged in and set cookies..........")
     res.status(200).json({ access_token, refresh_token });
   } catch (error) {
     if (error instanceof ApiError) {

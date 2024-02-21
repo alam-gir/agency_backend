@@ -11,6 +11,7 @@ import cors from 'cors'
 import testRoutes from "./routes/testRoutes.ts";
 import { corsOptions } from "./utils/corsOptions.ts";
 
+
 const app:Application =  express();
 
 app.use(cors({...corsOptions}));
@@ -22,6 +23,7 @@ app.use(cookieParser())
 
 //use routes
 app.use("/api/v1/auth",authRoutes);
+
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/category",categoryRoutes);
 app.use("/api/v1/project", projectRoutes);
