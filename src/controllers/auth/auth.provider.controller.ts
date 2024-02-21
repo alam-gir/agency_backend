@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ApiError } from "../../utils/apiError";
 import { createUser, findUserByEmail } from "../../lib/data/userData";
 import { loginTheUser } from "../../lib/auth/login-the-user";
+import { providers } from "../../lib/providers";
 
 const redirectToAuthUrl = async (req: Request, res: Response) => {
   const provider = req.params.provider;
@@ -74,27 +75,14 @@ const getAuthUrl = (provider: string) => {
   const redirectUri = `${process.env.BASE_API_V1_URL}/auth/login/${provider}/callback`;
   switch (provider) {
     case "google":
-      return googleAuthLink(redirectUri);
+      return providers.google.getAuthLink(redirectUri);
     case "facebook":
-      return facebookAuthLink(redirectUri);
+      return providers.facebook.getAuthLink(redirectUri);
     case "github":
-      return githubAuthLink(redirectUri);
+      return providers.github.getAuthLink(redirectUri);
     default:
       return null;
   }
-};
-
-const googleAuthLink = (redirectUri: string) => {
-  const scope = encodeURIComponent(
-    "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
-  );
-  return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
-};
-const facebookAuthLink = (redirectUri: string) => {
-  return "";
-};
-const githubAuthLink = (redirectUri: string) => {
-  return "";
 };
 
 const getAccessToken = async ({
@@ -106,7 +94,7 @@ const getAccessToken = async ({
 }) => {
   switch (provider) {
     case "google":
-      return await getGoogleAccessToken({ code });
+      return await providers.google.getAccessToken({ code });
     case "facebook":
       return "";
     case "github":
@@ -116,27 +104,6 @@ const getAccessToken = async ({
   }
 };
 
-const getGoogleAccessToken = async ({ code }: { code: string }) => {
-  const data: Record<string, string> = {
-    client_id: process.env.GOOGLE_CLIENT_ID || "",
-    client_secret: process.env.GOOGLE_CLIENT_SECRET || "",
-    code,
-    redirectUri: `${process.env.BASE_API_V1_URL}/auth/login/google/callback`,
-    grant_type: "authorization_code",
-  };
-
-  const response = await fetch(`https://oauth2.googleapis.com/token`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams(data),
-  });
-
-  const result = await response.json();
-
-  return result.access_token;
-};
 
 const getUserInfo = async ({
   access_token,
@@ -147,34 +114,24 @@ const getUserInfo = async ({
 }) => {
   switch (provider) {
     case "google":
-      return await getGoogleUserInfo(access_token);
+      return await providers.google.getUserInfo(access_token);
     case "facebook":
-      return await getFacebookUserInfo(access_token);
+      return await providers.facebook.getUserInfo(access_token);
     case "github":
-      return await getGithubUserInfo(access_token);
+      return await providers.github.getUserInfo(access_token);
     default:
       return null;
   }
 };
 
-const getGoogleUserInfo = async (access_token: string) => {
-  const response = await fetch(
-    `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${access_token}`
-  );
-
-  const user = await response.json();
-
-  return user;
-};
-
-const getFacebookUserInfo = async (access_token: string) => {};
-const getGithubUserInfo = async (access_token: string) => {};
 
 const getDbUser = async (email: string) => {
   const dbUser = await findUserByEmail(email);
   if (!dbUser) return null;
   return dbUser;
 };
+
+
 
 // <--------------------- exports ------------------->
 export { redirectToAuthUrl, loginProvider };
