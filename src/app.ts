@@ -8,7 +8,6 @@ import serviceRoutes from "./routes/service.routes.ts"
 import orderRoutes from "./routes/order.routes.ts"
 import cookieParser from "cookie-parser";
 import cors from 'cors'
-import testRoutes from "./routes/testRoutes.ts";
 import { corsOptions } from "./utils/corsOptions.ts";
 
 
@@ -22,14 +21,13 @@ app.use(cookieParser())
 
 
 //use routes
-app.use("/api/v1/auth",authRoutes);
+app.use("/v1/auth",authRoutes);
 
-app.use("/api/v1/user", userRoutes);
-app.use("/api/v1/category",categoryRoutes);
-app.use("/api/v1/project", projectRoutes);
-app.use("/api/v1/package", packageRoutes)
-app.use("/api/v1/service", serviceRoutes)
+app.use("/v1/user", userRoutes);
+app.use("/v1/category",categoryRoutes);
+app.use("/v1/project", projectRoutes);
+app.use("/v1/package", packageRoutes)
+app.use("/v1/service", serviceRoutes)
 app.use("/api/v1/order", orderRoutes)
-app.use("/test", testRoutes)
 
 export default app;
