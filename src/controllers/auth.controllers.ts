@@ -227,8 +227,8 @@ const loginUserProvider = async (req: Request, res: Response) => {
       maxAge: 60 * 15 * 1000, // 15 minutes
     });
 
-    console.log({ access_token, refresh_token })
-    console.log("logged in and set cookies..........")
+    console.log({ access_token, refresh_token });
+    console.log("logged in and set cookies..........");
     res.status(200).json({ access_token, refresh_token });
   } catch (error) {
     if (error instanceof ApiError) {
@@ -508,6 +508,29 @@ const verifyMail = async (req: Request, res: Response) => {
   }
 };
 
+const checkRefreshToken = async (req: Request, res: Response) => {
+  const { refresh_token } = req.body;
+  try {
+    if (!refreshToken) throw new ApiError(404, "Unauthorized!");
+
+    const user = await findUserByRefreshToken(refresh_token);
+
+    if (!user) throw new ApiError(404, "Invalid Token!");
+
+    return res.status(200).json({ message: "Valid token", success: true });
+  } catch (error) {
+    if (error instanceof ApiError) {
+      return res
+        .status(error.statusCode)
+        .json({ error: error.message, success: false });
+    } else {
+      return res
+        .status((error as any).statusCode || 500)
+        .json({ error: (error as any).message, success: false });
+    }
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -517,4 +540,5 @@ export {
   updateProviderAccessToken,
   sendVerificationMail,
   verifyMail,
+  checkRefreshToken,
 };

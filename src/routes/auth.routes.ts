@@ -25,6 +25,7 @@ router
   .post(authController.sendVerificationMail);
 router.route("/verify-mail").get(authController.verifyMail);
 
+router.route("/verify-refresh-token").post(authController.checkRefreshToken);
 //secured
 router.route("/logout").post(authController.logoutUser);
 
