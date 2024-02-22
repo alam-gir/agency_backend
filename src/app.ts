@@ -28,6 +28,6 @@ app.use("/v1/category",categoryRoutes);
 app.use("/v1/project", projectRoutes);
 app.use("/v1/package", packageRoutes)
 app.use("/v1/service", serviceRoutes)
-app.use("/api/v1/order", orderRoutes)
+app.use("/v1/order", orderRoutes)
 
 export default app;
