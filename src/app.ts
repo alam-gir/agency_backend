@@ -21,6 +21,10 @@ app.use(cookieParser())
 
 
 //use routes
+app.get('/', (req, res) => {
+    res.send('Application is alive!');
+  });
+  
 app.use("/v1/auth",authRoutes);
 
 app.use("/v1/user", userRoutes);
