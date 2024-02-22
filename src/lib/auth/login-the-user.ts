@@ -16,18 +16,32 @@ export const loginTheUser = async ({
     user.refreshToken?.push(refresh_token);
     await user.save();
 
-    response.cookie("access_token", access_token, {
-      httpOnly: true,
-      secure: true,
-      maxAge: 1000 * 60 * 15, // 15 minutes
-      sameSite: "none",
-    });
     response.cookie("refresh_token", refresh_token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: true,
-      maxAge: 1000 * 60 * 60 * 24 * 15, // 15 days
       sameSite: "none",
+      maxAge: 60 * 60 * 24 * 15 * 1000, // 15 days
     });
+
+    response.cookie("access_token", access_token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "none",
+      maxAge: 60 * 15 * 1000, // 15 minutes
+    });
+
+    // response.cookie("access_token", access_token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   maxAge: 1000 * 60 * 15, // 15 minutes
+    //   sameSite: "none",
+    // });
+    // response.cookie("refresh_token", refresh_token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   maxAge: 1000 * 60 * 60 * 24 * 15, // 15 days
+    //   sameSite: "none",
+    // });
 
     if (!access_token && !refresh_token) {
       return null;
