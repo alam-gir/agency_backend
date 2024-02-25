@@ -53,7 +53,7 @@ const projectSchema = new Schema<IProject>({
         type : Schema.ObjectId,
         ref: "file",
     }],
-})
+},{timestamps: true})
 
 
 export const ProjectModel = mongoose.model<IProject>("project",projectSchema);

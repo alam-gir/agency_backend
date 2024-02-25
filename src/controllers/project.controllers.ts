@@ -1,18 +1,17 @@
 import { Request, Response, response } from "express";
 import { IGetUserInterfaceRequst } from "../../@types/custom.ts";
 import { CategoryModel } from "../models/category.model.ts";
-import { ProjectModel } from "../models/project.model.ts";
+import { IProject, ProjectModel } from "../models/project.model.ts";
 import { ApiError } from "../utils/apiError.ts";
 import { ApiResponse } from "../utils/apiResponse.ts";
-import { delete_cloudinary, upload_cloudinary } from "../utils/cloudinary.ts";
+import { delete_cloudinary } from "../utils/cloudinary.ts";
 import { FileModel } from "../models/file.model.ts";
-import jwt from "jsonwebtoken";
 import { UploadApiResponse } from "cloudinary";
 import { v2 as cloudinary } from "cloudinary";
 import { Readable } from "stream";
 import { io } from "../index.ts";
 
-interface MulterFile {
+export interface MulterFile {
   originalname: string;
   encoding: string;
   mimetype: string;
@@ -22,23 +21,23 @@ interface MulterFile {
 
 const getProjects = async (req: Request, res: Response) => {
   let { page, limit } = req.query;
+
   const lim = parseInt(limit as string) || 10;
+
   const skip = (parseInt(page as string) - 1) * lim;
-  const cook = req.cookies["authjs.session-token"];
-  const verify = jwt.verify(cook, "mysecret");
+
+  const { category, search } = req.query;
+
   try {
-    // get all projects
-    const projects = await ProjectModel.find()
-      .skip(skip)
-      .limit(lim)
-      .populate("author", { name: 1, email: 1, role: 1 })
-      .populate(["category", "files", "images"])
-      .then((doc) => doc)
-      .catch((err) => {
-        if (err) throw new ApiError(400, "failed to get all projects!");
-      });
+    // get all projects with filter
+    const projects = await projectAggregation({
+      category: category as string,
+      search: search as string,
+      pagination: { skip, limit: lim },
+    });
 
     if (!projects) throw new ApiError(404, "projects not found!");
+
     const total = await ProjectModel.countDocuments();
     const totalPages = Math.ceil(total / lim);
 
@@ -52,6 +51,7 @@ const getProjects = async (req: Request, res: Response) => {
       })
     );
   } catch (error) {
+    console.log({ error });
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         error: {
@@ -141,6 +141,9 @@ const createProject = async (req: IGetUserInterfaceRequst, res: Response) => {
       .catch((err) => {
         throw new ApiError(400, "Project create failed!");
       });
+
+    // <----------------count ++ on category-------------->
+    await projectCountInCategory({ status: "increment", category_id });
 
     const project = await ProjectModel.findById(projectCreated?._id, {
       isNew: true,
@@ -236,6 +239,90 @@ const deleteProjectFiles = async (req: Request, res: Response) => {
 };
 
 //<---------------- helping functions ------------------->
+
+const projectAggregation = async ({
+  category,
+  search,
+  pagination,
+}: {
+  category?: string;
+  search?: string;
+  pagination?: { skip: number; limit: number };
+}) => {
+  let searchText = "";
+  let categoryTitle = "";
+
+  if (search) searchText = search;
+  if (category && category !== "all") categoryTitle = category;
+
+  return new Promise((resolve, reject) => {
+    const aggregation = [
+      {
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "author",
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      {
+        $lookup: {
+          from: "files",
+          localField: "files",
+          foreignField: "_id",
+          as: "files",
+        },
+      },
+      {
+        $lookup: {
+          from: "files",
+          localField: "images",
+          foreignField: "_id",
+          as: "images",
+        },
+      },
+      {
+        $match: {
+          $and: [
+            { title: { $regex: searchText, $options: "i" } },
+            { "category.title": { $regex: categoryTitle, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $skip: pagination?.skip || 0,
+      },
+      {
+        $limit: pagination?.limit || 10,
+      },
+    ];
+
+    ProjectModel.aggregate(aggregation)
+      .exec()
+      .then((projects) => resolve(projects))
+      .catch((err) => reject(err));
+  });
+};
+
+const projectCountInCategory = async ({
+  status,
+  category_id,
+}: {
+  status: "increment" | "decrement";
+  category_id: string;
+}) => {
+  await CategoryModel.findByIdAndUpdate(category_id, {
+    $inc: { project_count: status === "increment" ? 1 : -1 },
+  });
+};
 
 const deleteProjectFile = async (
   req: Request,
@@ -558,6 +645,9 @@ const updateProjectImages = async (
 
     const uploadPromises: Promise<UploadApiResponse | undefined>[] =
       req.files?.map((file: MulterFile) => {
+        const fileSize = file.size;
+        let writeBytes = 0;
+
         return new Promise((resolve, reject) => {
           const upload_stream = cloudinary.uploader.upload_stream(
             {
@@ -573,10 +663,23 @@ const updateProjectImages = async (
             }
           );
           const read_stream = new Readable();
-          read_stream.push(file.buffer);
+
+          const chunk_size = 200;
+          for (let i = 0; i < file.buffer.length; i += chunk_size) {
+            const chunk = file.buffer.subarray(i, i + chunk_size);
+            read_stream.push(chunk);
+          }
+
           read_stream.push(null);
+
+          read_stream.on("data", (chunk) => {
+            writeBytes += chunk.length;
+            const progress = Math.floor((writeBytes / fileSize) * 100);
+
+            io.emit("project-image-upload-progress", progress);
+          });
+
           read_stream.pipe(upload_stream);
-          upload_stream.on("data", (chunk) => console.log({ chunk }));
         });
       });
 
@@ -679,10 +782,9 @@ const updateProjectFile = async (
           read_stream.push(null);
 
           read_stream.on("data", (chunk) => {
-            
             writeBytes += chunk.length;
             const progress = Math.floor((writeBytes / fileSize) * 100);
-            
+
             io.emit("file-upload-progress", progress);
           });
 
