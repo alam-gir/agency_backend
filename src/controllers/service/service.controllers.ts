@@ -1,18 +1,12 @@
 import { Request, Response } from "express";
 import { IGetUserInterfaceRequst } from "../../../@types/custom";
-import { matchedData, validationResult } from "express-validator";
 import { CategoryModel } from "../../models/category.model";
 import { ApiError } from "../../utils/apiError";
-import { IServicePopulated, ServiceModel } from "../../models/service.model";
-import { delete_cloudinary, upload_cloudinary } from "../../utils/cloudinary";
-import { ImageModel } from "../../models/image.model";
+import { ServiceModel } from "../../models/service.model";
 import { ApiResponse } from "../../utils/apiResponse";
-import { PackageModel } from "../../models/package.model";
 import { isObjectId } from "../../lib/check-object-id";
 import { CreateStartupService } from "./helper/create-service";
-import {
-  updateServiceBasedOnType,
-} from "./helper/update-service";
+import { updateServiceBasedOnType } from "./helper/update-service";
 
 const getAllServices = async (req: Request, res: Response) => {
   let { page, limit } = req.query;
@@ -24,28 +18,40 @@ const getAllServices = async (req: Request, res: Response) => {
       .skip(skip)
       .limit(lim)
       .populate("author", { name: 1, email: 1, role: 1 })
-      .populate(["category", "icon", "packages"])
-      .then((doc) => doc)
+      .populate("category")
+      .populate("icon")
+      .populate({
+        path: "packages",
+        populate: [
+          { path: "basic"},
+          { path: "standard" },
+          { path: "premium" },
+        ],
+      })
+      .then((doc) => {
+
+        return doc;
+      })
       .catch((err) => {
-        if (err) throw new ApiError(400, "failed to get all services!");
+        if (err) throw new ApiError(400, err.message);
       });
 
+    console.log({ services });
     if (!services) throw new ApiError(404, "services not found!");
     const total = await ServiceModel.countDocuments();
     const totalPages = Math.ceil(total / lim);
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, "success", {
-          services,
-          current_page: page,
-          total_pages: totalPages,
-          total_docs: total,
-          show_limit: lim,
-        })
-      );
+    return res.status(200).json(
+      new ApiResponse(200, "success", {
+        services,
+        current_page: page,
+        total_pages: totalPages,
+        total_docs: total,
+        show_limit: lim,
+      })
+    );
   } catch (error) {
+    console.log("From get all services.", { error });
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
         error: {
@@ -74,7 +80,15 @@ const getSingleService = async (req: Request, res: Response) => {
     // get all services
     const service = await ServiceModel.findOne({ _id: service_id })
       .populate("author", { name: 1, email: 1, role: 1 })
-      .populate(["category", "icon", "packages"])
+      .populate(["category", "icon"])
+      .populate({
+        path: "packages",
+        populate: [
+          { path: "basic"},
+          { path: "standard" },
+          { path: "premium" },
+        ]
+      })
       .then((doc) => doc)
       .catch((err) => {
         if (err) throw new ApiError(400, "failed to get service!");
@@ -156,17 +170,19 @@ const updateService = async (req: IGetUserInterfaceRequst, res: Response) => {
   const type = req.query.type;
 
   try {
-    if (!type || !service_id) throw new ApiError(400, "Type and service_id is required!");
+    if (!type || !service_id)
+      throw new ApiError(400, "Type and service_id is required!");
 
     const service = await ServiceModel.findById(service_id);
-    if(!service) throw new ApiError(404, "Service not found!");
+    if (!service) throw new ApiError(404, "Service not found!");
 
     const data = await updateServiceBasedOnType({
       service_id,
       type: type as string,
       req,
     });
-    if(!data) throw new ApiError(400, "Service update failed! something went wrong!");
+    if (!data)
+      throw new ApiError(400, "Service update failed! something went wrong!");
     if (data instanceof ApiError) throw data;
 
     return res

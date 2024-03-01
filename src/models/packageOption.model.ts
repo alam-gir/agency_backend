@@ -6,7 +6,8 @@ export interface IPackageOption extends Document {
   delivery_time?: string;
   revision?: number | "unlimited";
   features?: string[];
-  price?: mongoose.Types.ObjectId;
+  price_bdt?: number;
+  price_usd?: number;
 }
 
 const packageOptionSchema = new Schema<IPackageOption>(
@@ -16,10 +17,8 @@ const packageOptionSchema = new Schema<IPackageOption>(
     delivery_time: String,
     revision: String,
     features: [String],
-    price: {
-      type: Schema.Types.ObjectId,
-      ref: "price",
-    },
+    price_bdt: Number,
+    price_usd: Number,
   },
   { timestamps: true }
 );

@@ -9,15 +9,15 @@ export interface IPackage extends Document {
 const packageSchema = new Schema<IPackage>({
   basic: {
     type: Schema.Types.ObjectId,
-    ref: "basic"
+    ref: "packageOption"
   },
   standard: {
     type: Schema.Types.ObjectId,
-    ref: "standard"
+    ref: "packageOption"
   },
   premium: {
     type: Schema.Types.ObjectId,
-    ref: "premium"
+    ref: "packageOption"
   },
 },{timestamps: true});
 
