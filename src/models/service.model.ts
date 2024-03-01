@@ -1,19 +1,26 @@
 import mongoose , {Document, Schema} from 'mongoose';
 import { IImage } from './image.model';
+import { IFile } from './file.model';
+import { IPackage } from './package.model';
+import { ICategory } from './category.model';
+import { IUser } from './user.model';
 
 export interface IService extends Document {
     title: string;
-    description: string;
-    short_description: string;
-    status: string;
-    icon: mongoose.Types.ObjectId | IImage;
-    packages: mongoose.Types.ObjectId[];
-    category: mongoose.Types.ObjectId;
-    author: mongoose.Types.ObjectId;
+    description?: string;
+    short_description?: string;
+    status: "active" | "inactive";
+    icon?: mongoose.Types.ObjectId | IImage;
+    packages: mongoose.Types.ObjectId | IPackage;
+    category: mongoose.Types.ObjectId | ICategory;
+    author: mongoose.Types.ObjectId | IUser;   
 }
 
 export interface IServicePopulated extends IService {
-    icon: IImage;
+    icon: IFile,
+    packages: IPackage,
+    category: ICategory,
+    author: IUser
 }
 
 const serviceSchema = new Schema<IService>({
@@ -24,25 +31,23 @@ const serviceSchema = new Schema<IService>({
     },
     description:{
         type: String,
-        required: true
     },
     short_description:{
         type: String,
-        required: true
     },
     status:{
+        enum: ["active", "inactive"],
         type: String,
-        enum: ['active', 'inactive'],
-        default: 'active'
+        default: "inactive"
     },
     icon: {
         type: Schema.Types.ObjectId,
-        ref: 'image'
+        ref: 'file',
     },
-    packages: [{
+    packages: {
         type: Schema.Types.ObjectId,
         ref: 'package'
-    }],
+    },
     category: {
         type: Schema.Types.ObjectId,
         ref: 'category'
@@ -51,6 +56,6 @@ const serviceSchema = new Schema<IService>({
         type: Schema.Types.ObjectId,
         ref: 'user'
     }
-})
+},{timestamps: true})
 
 export const ServiceModel = mongoose.model<IService>('service', serviceSchema);

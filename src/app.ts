@@ -31,7 +31,7 @@ app.use("/v1/user", userRoutes);
 app.use("/v1/category",categoryRoutes);
 app.use("/v1/project", projectRoutes);
 app.use("/v1/package", packageRoutes)
-app.use("/v1/service", serviceRoutes)
+app.use("/v1/services", serviceRoutes)
 app.use("/v1/order", orderRoutes)
 
 

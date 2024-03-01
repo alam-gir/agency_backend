@@ -1,68 +1,25 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface IPackage extends Document {
-  type: string;
-  description: string;
-  price_bdt: number;
-  price_usd: number;
-  icon: mongoose.Types.ObjectId;
-  delivery_time: string;
-  features: string[];
-  revision_time: number;
-  category: mongoose.Types.ObjectId;
-  author: mongoose.Types.ObjectId;
-  status: "active" | "inactive";
-
+  basic: mongoose.Types.ObjectId;
+  standard: mongoose.Types.ObjectId;
+  premium: mongoose.Types.ObjectId;
 }
 
 const packageSchema = new Schema<IPackage>({
-  type: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    require: true,
-  },
-  price_bdt: {
-    type: Number,
-    required: true,
-  },
-  price_usd: {
-    type: Number,
-    required: true,
-  },
-  icon: {
+  basic: {
     type: Schema.Types.ObjectId,
-    ref: "image",
+    ref: "basic"
   },
-  delivery_time: {
-    type: String,
-    require: true,
-  },
-  features: [{
-    type: String,
-    required: true,
-  }],
-  revision_time:{
-    type: Number,
-    require: true,
-  },
-  category: {
+  standard: {
     type: Schema.Types.ObjectId,
-    ref: "category",
+    ref: "standard"
   },
-  author: {
+  premium: {
     type: Schema.Types.ObjectId,
-    ref: "user"
+    ref: "premium"
   },
-  status: {
-    type: String,
-    enum: ["active", "inactive"],
-    default: "active",
-  },
-
-});
+},{timestamps: true});
 
 
 export const PackageModel = mongoose.model<IPackage>("package", packageSchema);

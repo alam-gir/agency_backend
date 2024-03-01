@@ -6,8 +6,8 @@ import { verifyJWT } from "../middlewares/jwtVerify.middleware";
 
 const router = Router();
 
-router
-  .route("/place")
-  .post(validation.orderCreateDataValidation, createGuestUser, verifyJWT, orderControll.placeOrder);
+// router
+//   .route("/place")
+//   .post(validation.orderCreateDataValidation, createGuestUser, verifyJWT, orderControll.placeOrder);
 
 export default router;

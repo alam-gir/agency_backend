@@ -93,7 +93,6 @@ const updateCategory = async (req: IGetUserInterfaceRequst, res: Response) => {
     if (icon) {
       //<----------------upload new icon to cludinary-------------------->
       const newIcon = await uploadCategoryIcon(icon) as any;
-
       //<----------------replace in DB with old icon file-------------------->
       if (newIcon) {
         await FileModel.updateOne(

@@ -35,9 +35,9 @@ export const verifyJWT = async (
     );
 
     if (!user) throw new ApiError(404, "user not found!");
-
+    
     req.user = user;
-
+      
     next();
   } catch (error) {
     fs.readdir("./public/temp/", (err, files) => {

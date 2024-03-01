@@ -63,7 +63,6 @@ export const providers = {
       );
 
       const result = await response.json();
-      console.log({ result });
 
       return result.access_token;
     },
@@ -73,7 +72,6 @@ export const providers = {
       );
 
       const user = await response.json();
-      console.log({ user });
 
       return user;
     },
@@ -104,7 +102,6 @@ export const providers = {
       );
 
       const result = await response.json();
-      console.log({ result });
       return result.access_token;
     },
     getUserInfo: async (access_token: string) => {

@@ -13,11 +13,13 @@ import { IUserPopulate } from "../models/user.model";
 import { ApiError } from "./apiError";
 env.config();
 
-cloudinary.config({
+ export const cloudinaryConfig = {
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+};
+
+cloudinary.config(cloudinaryConfig)
 const upload_cloudinary = async (
   filePath: string,
   folderPath: string,
@@ -102,7 +104,6 @@ const delete_cloudinary = async (public_id: string) => {
       (error, result) => {
         if (error) {
           throw new ApiError(400, "failed to delete image from cloudinary!");
-          console.log({ error });
         }
         return result;
       }

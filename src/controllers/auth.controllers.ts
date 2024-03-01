@@ -226,9 +226,7 @@ const loginUserProvider = async (req: Request, res: Response) => {
       sameSite: "none",
       maxAge: 60 * 15 * 1000, // 15 minutes
     });
-
-    console.log({ access_token, refresh_token });
-    console.log("logged in and set cookies..........");
+    
     res.status(200).json({ access_token, refresh_token });
   } catch (error) {
     if (error instanceof ApiError) {
