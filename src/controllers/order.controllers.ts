@@ -8,7 +8,7 @@ import { BuyerModel, IBuyer } from "../models/buyer.model";
 import { isObjectId } from "../lib/check-object-id";
 import { PackageOptionModel } from "../models/packageOption.model";
 import { sendEmail } from "../lib/nodemailer";
-import { order_placed_email_template_buyer } from "../lib/order-email-template";
+import { order_placed_email_template_admin, order_placed_email_template_buyer } from "../lib/order-email-template";
 
 const placeOrder = async (req: IGetUserInterfaceRequst, res: Response) => {
   //get data from request
@@ -28,7 +28,7 @@ const placeOrder = async (req: IGetUserInterfaceRequst, res: Response) => {
     console.log({ order });
 
     const email_to_buyer = await sendEmailToBuyer({ order });
-    console.log({ email_to_buyer });
+    const email_to_admin = await sendEmailToAdmin({ order });
 
     // send response
     return res
@@ -118,6 +118,22 @@ const sendEmailToBuyer = async ({
     to: order.buyer.email,
     subject: "An order placed in Wafipix.",
     html: order_placed_email_template_buyer({ order }),
+  })
+    .then((data) => data)
+    .catch((error) => {
+      throw new ApiError(400, error.message);
+    });
+};
+
+const sendEmailToAdmin = async ({
+  order,
+}: {
+  order: IOrderPopulated;
+}) => {
+  return await sendEmail({
+    to: process.env.ORDER_NOTIFICATION_EMAIL!,
+    subject: "An order placed in Wafipix.",
+    html: order_placed_email_template_admin({ order }),
   })
     .then((data) => data)
     .catch((error) => {

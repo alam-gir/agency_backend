@@ -90,3 +90,89 @@ export const order_placed_email_template_buyer = ({ order}:{order: IOrderPopulat
     </html>
     `
   }
+
+export const order_placed_email_template_admin = ({ order}:{order: IOrderPopulated}) => {
+    return`<!DOCTYPE html>
+    <html>
+    <head>
+        <title>New Order Notification - Wafipix</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f4f4f4;
+            }
+            .email-container {
+                width: 80%;
+                margin: 0 auto;
+                background-color: #ffffff;
+                padding: 20px;
+                border-radius: 10px;
+            }
+            .email-header {
+                text-align: center;
+                padding: 20px;
+                background-color: #007BFF;
+                color: #ffffff;
+            }
+            .email-body {
+                padding: 20px;
+            }
+            .email-footer {
+                text-align: center;
+                padding: 20px;
+                background-color: #f4f4f4;
+                color: #333333;
+            }
+            .order-details {
+                margin-top: 20px;
+            }
+            .order-details h3 {
+                margin-bottom: 10px;
+            }
+            .order-details p {
+                margin-bottom: 10px;
+            }
+            .features-list {
+                list-style-type: disc;
+                padding-left: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="email-header">
+                <h1>New Order Notification</h1>
+            </div>
+            <div class="email-body">
+                <p>Dear Admin,</p>
+                <p>A new order has been placed on Wafipix. Here are the details:</p>
+                <div class="order-details">
+                    <h3>Order Details:</h3>
+                    <p>Order ID: ${order?._id}</p>
+                    <p>Customer Name: ${order?.buyer?.name}</p>
+                    <p>Customer Email: ${order?.buyer?.email}</p>
+                    <p>Package: ${order?.packageOption?.title}</p>
+                    <p>Price: ${order?.packageOption?.price_bdt}</p>
+                    <h4>Features:</h4>
+                    <ul class="features-list">
+                    <p>Features:</p>
+                        ${order?.packageOption?.features?.map(feature => {
+                            return (
+                                `<li>${feature}</li>`
+                            )
+                        }).join('')}
+                    </ul>
+                </div>
+                <p>Please review the order and proceed with the necessary steps to fulfill it.</p>
+                <p>Thank you for your attention to this matter.</p>
+            </div>
+            <div class="email-footer">
+                <p>&copy; ${(new Date()).getFullYear()} Wafipix. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>    
+    `
+  }
