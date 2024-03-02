@@ -1,13 +1,14 @@
 import { Response } from "express";
 import { IGetUserInterfaceRequst } from "../../@types/custom";
 import { ApiError } from "../utils/apiError";
-import { OrderModel } from "../models/order.model";
+import { IOrder, IOrderPopulated, OrderModel } from "../models/order.model";
 import { ServiceModel } from "../models/service.model";
-import { PackageModel } from "../models/package.model";
 import { ApiResponse } from "../utils/apiResponse";
 import { BuyerModel, IBuyer } from "../models/buyer.model";
 import { isObjectId } from "../lib/check-object-id";
 import { PackageOptionModel } from "../models/packageOption.model";
+import { sendEmail } from "../lib/nodemailer";
+import { order_placed_email_template_buyer } from "../lib/order-email-template";
 
 const placeOrder = async (req: IGetUserInterfaceRequst, res: Response) => {
   //get data from request
@@ -16,7 +17,7 @@ const placeOrder = async (req: IGetUserInterfaceRequst, res: Response) => {
     service_id: string;
     package_option_id: string;
   };
-  console.log({ buyer, service_id, package_option_id });
+
   try {
     // validate data
     if (!buyer || !isObjectId(service_id) || !isObjectId(package_option_id))
@@ -24,6 +25,10 @@ const placeOrder = async (req: IGetUserInterfaceRequst, res: Response) => {
 
     // set data to db
     const order = await saveOrder({ buyer, service_id, package_option_id });
+    console.log({ order });
+
+    const email_to_buyer = await sendEmailToBuyer({ order });
+    console.log({ email_to_buyer });
 
     // send response
     return res
@@ -87,19 +92,37 @@ const saveOrder = async ({
   }
 
   // create order
-  const order = await OrderModel.create({
-    buyer: buyer_data._id,
-    service: service_id,
-    packageOption: package_option_id,
-  })
-    .then((doc) => doc as any)
-    .catch((err) => {
-      if (err) throw new ApiError((err as any).code || 400, err);
-    });
+  const order = (
+    await OrderModel.create({
+      buyer: buyer_data._id,
+      service: service_id,
+      packageOption: package_option_id,
+    })
+      .then((doc) => doc as any)
+      .catch((err) => {
+        if (err) throw new ApiError((err as any).code || 400, err);
+      })
+  ).populate(["buyer", "packageOption"]);
 
   if (!order)
     throw new ApiError(400, "something went wrong! order not created!");
   return order;
+};
+
+const sendEmailToBuyer = async ({
+  order,
+}: {
+  order: IOrderPopulated;
+}) => {
+  return await sendEmail({
+    to: order.buyer.email,
+    subject: "An order placed in Wafipix.",
+    html: order_placed_email_template_buyer({ order }),
+  })
+    .then((data) => data)
+    .catch((error) => {
+      throw new ApiError(400, error.message);
+    });
 };
 
 export { placeOrder };
