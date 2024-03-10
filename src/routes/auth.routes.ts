@@ -20,6 +20,7 @@ router
   .route("/provider/:id/update")
   .get(authController.updateProviderAccessToken);
 router.route("/refresh-token").get(authController.refreshToken);
+
 router
   .route("/send-verification-mail")
   .post(authController.sendVerificationMail);

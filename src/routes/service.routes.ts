@@ -13,7 +13,7 @@ router
   .post(verifyJWT, verifyRole("admin"), serviceControll.createService);
 
 router
-  .route("/:id")
+  .route("/:name")
   .get(serviceControll.getSingleService)
   .patch(
     upload.single("icon"),
